@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.ktlint)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -42,4 +44,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // MockK 테스트 라이브러리 추가
+    testImplementation(libs.test.mockk)
+
+    // 코루틴 테스트가 필요한 경우를 대비해 추가 권장
+    testImplementation(libs.kotlinx.coroutines.test)
+
+    // 로컬 단위 테스트용 Robolectric 추가
+    testImplementation(libs.robolectric)
 }

@@ -27,7 +27,7 @@ fun HomeScreen(
     HomeScreen(
         state = state,
         onOpenDetail = onOpenDetail,
-        onLoadMore = { viewModel.processIntent(HomeIntent.LoadMore) }
+        onLoadMore = { viewModel.processIntent(HomeIntent.LoadMore) },
     )
 }
 

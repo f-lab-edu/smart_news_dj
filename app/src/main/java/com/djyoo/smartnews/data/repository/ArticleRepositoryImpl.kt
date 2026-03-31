@@ -53,6 +53,5 @@ class ArticleRepositoryImpl(
         return articles.size
     }
 
-    override suspend fun getArticlesSnapshot(limit: Int): List<Article> =
-        articleDao.getArticlesWithKeywords(limit).map { it.toDomain() }
+    override suspend fun getArticlesSnapshot(limit: Int): List<Article> = articleDao.getArticlesWithKeywords(limit).map { it.toDomain() }
 }

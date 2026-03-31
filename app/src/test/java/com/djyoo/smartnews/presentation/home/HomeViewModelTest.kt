@@ -18,8 +18,8 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
-    @get:Rule
     // viewModelScope(Main)이 테스트 디스패처에서 동작하도록 보장한다.
+    @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     private val fetchNewsUseCase: FetchNewsUseCase = mockk()

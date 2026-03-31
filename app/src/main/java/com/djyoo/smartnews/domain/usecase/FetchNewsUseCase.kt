@@ -1,7 +1,7 @@
 package com.djyoo.smartnews.domain.usecase
 
-import com.djyoo.smartnews.domain.repository.ArticleRepository
 import com.djyoo.smartnews.domain.model.Article
+import com.djyoo.smartnews.domain.repository.ArticleRepository
 
 class FetchNewsUseCase(
     private val articleRepository: ArticleRepository,

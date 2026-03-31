@@ -1,7 +1,6 @@
 package com.djyoo.smartnews.presentation.home
 
 import androidx.lifecycle.ViewModel
-import com.djyoo.smartnews.domain.repository.ArticleRepository
 import com.djyoo.smartnews.domain.usecase.FetchNewsUseCase
 import com.djyoo.smartnews.domain.usecase.GetRecommendationsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +13,6 @@ import javax.inject.Inject
 class HomeViewModel
     @Inject
     constructor(
-        private val articleRepository: ArticleRepository,
         private val fetchNewsUseCase: FetchNewsUseCase,
         private val getRecommendationsUseCase: GetRecommendationsUseCase,
     ) : ViewModel() {
@@ -23,9 +21,6 @@ class HomeViewModel
 
         private var start: Int = 1
         private val pageSize = 100
-
-        init {
-        }
 
         fun processIntent(intent: HomeIntent) {
         }

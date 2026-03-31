@@ -13,7 +13,7 @@ class UserProfileRepositoryImpl(
 
     override suspend fun getUserKeywordsSnapshot(limit: Int): List<UserKeyword> = TODO("Not implemented")
 
-    override suspend fun upsertUserKeywords(keywords: List<UserKeyword>) {
+    override suspend fun saveUserKeywords(keywords: List<UserKeyword>) {
         TODO("Not implemented")
     }
 }

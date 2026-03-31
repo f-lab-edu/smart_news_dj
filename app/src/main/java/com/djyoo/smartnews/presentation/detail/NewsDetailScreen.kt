@@ -60,11 +60,9 @@ fun NewsDetailContent(
                 .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = article?.title ?: "", style = MaterialTheme.typography.titleLarge)
-        Text(text = article?.description ?: "")
-        Button(onClick = {
-            onBack()
-        }) {
+        Text(text = article?.title.orEmpty(), style = MaterialTheme.typography.titleLarge)
+        Text(text = article?.description.orEmpty())
+        Button(onClick = onBack) {
             Text("뒤로 가기")
         }
     }

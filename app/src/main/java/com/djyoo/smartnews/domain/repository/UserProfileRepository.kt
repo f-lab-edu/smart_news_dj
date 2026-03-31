@@ -8,5 +8,5 @@ interface UserProfileRepository {
 
     suspend fun getUserKeywordsSnapshot(limit: Int = 20): List<UserKeyword>
 
-    suspend fun upsertUserKeywords(keywords: List<UserKeyword>)
+    suspend fun saveUserKeywords(keywords: List<UserKeyword>)
 }

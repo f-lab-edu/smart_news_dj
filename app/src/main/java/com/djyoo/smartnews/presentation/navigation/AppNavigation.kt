@@ -1,5 +1,6 @@
 package com.djyoo.smartnews.presentation.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,9 +12,9 @@ import com.djyoo.smartnews.presentation.home.HomeScreen
 
 object Routes {
     const val HOME = "home"
-    const val DETAIL = "detail/{articleId}"
+    const val DETAIL = "detail?articleId={articleId}"
 
-    fun detailRoute(articleId: String): String = "detail/$articleId"
+    fun detailRoute(articleId: String): String = "detail?articleId=${Uri.encode(articleId)}"
 }
 
 @Composable

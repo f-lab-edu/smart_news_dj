@@ -1,5 +1,6 @@
 package com.djyoo.smartnews.presentation.detail
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.djyoo.smartnews.domain.usecase.RecordInteractionUseCase
@@ -19,7 +20,7 @@ class NewsDetailViewModel
         private val _state = MutableStateFlow(NewsDetailState.initial())
         val state: StateFlow<NewsDetailState> = _state.asStateFlow()
         private val startTime = System.currentTimeMillis()
-        private val articleId: String = savedStateHandle.get<String>("articleId").orEmpty()
+        private val articleId: String = Uri.decode(savedStateHandle.get<String>("articleId").orEmpty())
 
         fun processIntent(intent: NewsDetailIntent) {
         }

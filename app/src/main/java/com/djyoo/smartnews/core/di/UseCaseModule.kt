@@ -6,6 +6,7 @@ import com.djyoo.smartnews.domain.repository.ArticleRepository
 import com.djyoo.smartnews.domain.repository.InteractionRepository
 import com.djyoo.smartnews.domain.repository.UserProfileRepository
 import com.djyoo.smartnews.domain.scorer.ScoreCalculator
+import com.djyoo.smartnews.domain.usecase.FetchNewsPageUseCase
 import com.djyoo.smartnews.domain.usecase.FetchNewsUseCase
 import com.djyoo.smartnews.domain.usecase.GetRecommendationsUseCase
 import com.djyoo.smartnews.domain.usecase.RecordInteractionUseCase
@@ -22,6 +23,10 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideFetchNewsUseCase(articleRepository: ArticleRepository): FetchNewsUseCase = FetchNewsUseCase(articleRepository)
+
+    @Provides
+    @Singleton
+    fun provideFetchNewsPageUseCase(articleRepository: ArticleRepository): FetchNewsPageUseCase = FetchNewsPageUseCase(articleRepository)
 
     @Provides
     @Singleton

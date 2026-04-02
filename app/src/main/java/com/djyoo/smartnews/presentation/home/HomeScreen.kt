@@ -1,12 +1,25 @@
 package com.djyoo.smartnews.presentation.home
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -16,40 +29,134 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.djyoo.smartnews.R
 import com.djyoo.smartnews.domain.model.Article
 import com.djyoo.smartnews.presentation.theme.SmartNewsTheme
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun HomeScreen(
-    onOpenDetail: (String) -> Unit,
+    onClickedItem: (String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    HomeScreen(
+    HomeScreenContent(
         state = state,
-        onOpenDetail = onOpenDetail,
-        onLoadMore = { viewModel.processIntent(HomeIntent.LoadMore) },
+        onClickedItem = onClickedItem,
+        onRefreshRequested = { viewModel.processIntent(HomeIntent.OnRefreshRequested) },
+        onReachedBottom = { viewModel.processIntent(HomeIntent.OnReachedBottom) },
     )
 }
 
 @Composable
-private fun HomeScreen(
+internal fun HomeScreenContent(
     state: HomeState,
-    onOpenDetail: (String) -> Unit,
-    onLoadMore: () -> Unit,
+    onClickedItem: (String) -> Unit,
+    onRefreshRequested: () -> Unit,
+    onReachedBottom: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = stringResource(id = R.string.recommend_news_title),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text = stringResource(id = R.string.all_news_title),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+    val listState = rememberLazyListState()
+    val totalItemCount = state.recommendations.size + state.newsList.size + 2 // section headers
+
+    LaunchedEffect(listState, totalItemCount) {
+        snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo
+                .lastOrNull()
+                ?.index ?: -1
+        }.map { lastVisibleIndex -> lastVisibleIndex >= totalItemCount - 1 && totalItemCount > 0 }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect { onReachedBottom() }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            item {
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.recommend_news_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Text(
+                        text = "새로고침",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(onClick = onRefreshRequested),
+                    )
+                }
+            }
+            items(state.recommendations, key = { "rec_${it.id}" }) { article ->
+                ArticleListItem(
+                    article = article,
+                    onClick = { onClickedItem(article.id) },
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+            }
+            item {
+                Text(
+                    text = stringResource(id = R.string.all_news_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            items(state.newsList, key = { "all_${it.id}" }) { article ->
+                ArticleListItem(
+                    article = article,
+                    onClick = { onClickedItem(article.id) },
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                )
+            }
+        }
+
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ArticleListItem(
+    article: Article,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = article.title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+            )
+            Text(
+                text = article.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+            )
+        }
     }
 }
 
@@ -76,10 +183,11 @@ private fun HomeScreenPreview() {
             isLoading = false,
         )
     SmartNewsTheme {
-        HomeScreen(
+        HomeScreenContent(
             state = state,
-            onOpenDetail = {},
-            onLoadMore = {},
+            onClickedItem = {},
+            onRefreshRequested = {},
+            onReachedBottom = {},
         )
     }
 }

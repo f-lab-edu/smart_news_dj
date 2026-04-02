@@ -1,13 +1,13 @@
 package com.djyoo.smartnews.presentation.home
 
 sealed interface HomeIntent {
-    data object LoadInitial : HomeIntent
+    data object OnScreenEntered : HomeIntent
 
-    data object Refresh : HomeIntent
+    data object OnRefreshRequested : HomeIntent
 
-    data object LoadMore : HomeIntent
+    data object OnReachedBottom : HomeIntent
 
-    data class OpenArticle(
+    data class OnArticleClicked(
         val articleId: String,
     ) : HomeIntent
 }

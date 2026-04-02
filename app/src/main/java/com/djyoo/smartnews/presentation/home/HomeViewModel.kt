@@ -22,6 +22,11 @@ class HomeViewModel
         private val fetchNewsUseCase: FetchNewsUseCase,
         private val getRecommendationsUseCase: GetRecommendationsUseCase, // todo 추후 사용 예정
     ) : ViewModel() {
+        private companion object {
+            // Naver API에서 사용하는 기본 broad query.
+            const val DEFAULT_QUERY: String = "뉴스"
+        }
+
         private val _state = MutableStateFlow(HomeState())
         val state: StateFlow<HomeState> = _state.asStateFlow()
 
@@ -32,15 +37,15 @@ class HomeViewModel
         private var isPaging = false
 
         init {
-            processIntent(HomeIntent.LoadInitial)
+            processIntent(HomeIntent.OnScreenEntered)
         }
 
         fun processIntent(intent: HomeIntent) {
             when (intent) {
-                HomeIntent.LoadInitial -> loadInitial()
-                HomeIntent.Refresh -> refresh()
-                HomeIntent.LoadMore -> loadMore()
-                is HomeIntent.OpenArticle -> Unit
+                HomeIntent.OnScreenEntered -> loadInitial()
+                HomeIntent.OnRefreshRequested -> refresh()
+                HomeIntent.OnReachedBottom -> loadMore()
+                is HomeIntent.OnArticleClicked -> Unit
             }
         }
 
@@ -48,7 +53,7 @@ class HomeViewModel
             viewModelScope.launch {
                 _state.update { it.copy(isLoading = true) }
                 runCatching {
-                    fetchNewsUseCase(start = apiStartIndex, display = initialLoadSize)
+                    fetchNewsUseCase(query = DEFAULT_QUERY, start = apiStartIndex, display = initialLoadSize)
                 }.onSuccess { articles ->
                     _state.update { current -> current.copy(newsList = articles, isLoading = false) }
                 }.onFailure {
@@ -69,7 +74,7 @@ class HomeViewModel
             val nextStart = apiStartIndex + _state.value.newsList.size
             viewModelScope.launch {
                 runCatching {
-                    fetchNewsPageUseCase(start = nextStart, display = pageSize)
+                    fetchNewsPageUseCase(query = DEFAULT_QUERY, start = nextStart, display = pageSize)
                 }.onSuccess { pageArticles ->
                     _state.update { current -> current.copy(newsList = appendUnique(current.newsList, pageArticles)) }
                 }.onFailure {

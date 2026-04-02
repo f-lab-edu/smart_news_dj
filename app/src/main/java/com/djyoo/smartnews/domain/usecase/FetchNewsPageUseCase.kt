@@ -7,8 +7,8 @@ class FetchNewsPageUseCase(
     private val articleRepository: ArticleRepository,
 ) {
     suspend operator fun invoke(
-        query: String = "뉴스",
+        query: String,
         start: Int,
-        display: Int = 20,
+        display: Int,
     ): List<Article> = articleRepository.fetchNewsPage(query = query, start = start, display = display)
 }

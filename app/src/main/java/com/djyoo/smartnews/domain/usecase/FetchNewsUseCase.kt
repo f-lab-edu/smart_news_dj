@@ -7,9 +7,9 @@ class FetchNewsUseCase(
     private val articleRepository: ArticleRepository,
 ) {
     suspend operator fun invoke(
-        query: String = "뉴스",
+        query: String,
         start: Int,
-        display: Int = 100,
+        display: Int,
     ): List<Article> {
         val fetchedCount = articleRepository.fetchAndStoreNews(query = query, start = start, display = display)
         val limit = minOf((start - 1) + fetchedCount, 100)

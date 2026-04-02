@@ -54,7 +54,7 @@ class HomeViewModelTest {
             val viewModel = newViewModel()
             advanceUntilIdle()
 
-            viewModel.processIntent(HomeIntent.Refresh)
+            viewModel.processIntent(HomeIntent.OnRefreshRequested)
             advanceUntilIdle()
 
             assertEquals(refreshedArticles, viewModel.state.value.newsList)
@@ -74,7 +74,7 @@ class HomeViewModelTest {
             val viewModel = newViewModel()
             advanceUntilIdle()
 
-            viewModel.processIntent(HomeIntent.LoadMore)
+            viewModel.processIntent(HomeIntent.OnReachedBottom)
             advanceUntilIdle()
 
             // expected = 초기 100개 + 중복 제거된 90개

@@ -20,7 +20,12 @@ class NewsDetailViewModel
         private val _state = MutableStateFlow(NewsDetailState.initial())
         val state: StateFlow<NewsDetailState> = _state.asStateFlow()
         private val startTime = System.currentTimeMillis()
-        private val articleId: String = Uri.decode(savedStateHandle.get<String>("articleId").orEmpty())
+        private val articleId: String =
+            try {
+                Uri.decode(savedStateHandle.get<String>("articleId"))
+            } catch (e: Exception) {
+                savedStateHandle.get<String>("articleId").orEmpty() // 실패 시 원본 사용
+            }
 
         fun processIntent(intent: NewsDetailIntent) {
         }

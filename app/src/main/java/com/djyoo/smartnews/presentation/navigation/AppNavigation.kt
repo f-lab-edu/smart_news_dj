@@ -26,7 +26,7 @@ fun AppNavigation() {
     ) {
         composable(Routes.HOME) {
             HomeScreen(
-                onOpenDetail = { articleId ->
+                onClickedItem = { articleId ->
                     navController.navigate(Routes.detailRoute(articleId))
                 },
             )

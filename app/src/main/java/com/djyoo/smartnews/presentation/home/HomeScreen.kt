@@ -35,25 +35,25 @@ import kotlinx.coroutines.flow.map
 
 @Composable
 fun HomeScreen(
-    onOpenDetail: (String) -> Unit,
+    onClickedItem: (String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     HomeScreenContent(
         state = state,
-        onOpenDetail = onOpenDetail,
-        onRefresh = { viewModel.processIntent(HomeIntent.Refresh) },
-        onLoadMore = { viewModel.processIntent(HomeIntent.LoadMore) },
+        onClickedItem = onClickedItem,
+        onRefreshRequested = { viewModel.processIntent(HomeIntent.OnRefreshRequested) },
+        onReachedBottom = { viewModel.processIntent(HomeIntent.OnReachedBottom) },
     )
 }
 
 @Composable
 internal fun HomeScreenContent(
     state: HomeState,
-    onOpenDetail: (String) -> Unit,
-    onRefresh: () -> Unit,
-    onLoadMore: () -> Unit,
+    onClickedItem: (String) -> Unit,
+    onRefreshRequested: () -> Unit,
+    onReachedBottom: () -> Unit,
 ) {
     val listState = rememberLazyListState()
     val totalItemCount = state.recommendations.size + state.newsList.size + 2 // section headers
@@ -66,7 +66,7 @@ internal fun HomeScreenContent(
         }.map { lastVisibleIndex -> lastVisibleIndex >= totalItemCount - 1 && totalItemCount > 0 }
             .distinctUntilChanged()
             .filter { it }
-            .collect { onLoadMore() }
+            .collect { onReachedBottom() }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -92,14 +92,14 @@ internal fun HomeScreenContent(
                         text = "새로고침",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onRefresh),
+                        modifier = Modifier.clickable(onClick = onRefreshRequested),
                     )
                 }
             }
             items(state.recommendations, key = { "rec_${it.id}" }) { article ->
                 ArticleListItem(
                     article = article,
-                    onClick = { onOpenDetail(article.id) },
+                    onClick = { onClickedItem(article.id) },
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
@@ -114,7 +114,7 @@ internal fun HomeScreenContent(
             items(state.newsList, key = { "all_${it.id}" }) { article ->
                 ArticleListItem(
                     article = article,
-                    onClick = { onOpenDetail(article.id) },
+                    onClick = { onClickedItem(article.id) },
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
@@ -185,9 +185,9 @@ private fun HomeScreenPreview() {
     SmartNewsTheme {
         HomeScreenContent(
             state = state,
-            onOpenDetail = {},
-            onRefresh = {},
-            onLoadMore = {},
+            onClickedItem = {},
+            onRefreshRequested = {},
+            onReachedBottom = {},
         )
     }
 }

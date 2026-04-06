@@ -1,4 +1,4 @@
-package com.djyoo.smartnews.core.keyword
+package com.djyoo.smartnews.data.keyword
 
 import com.djyoo.smartnews.domain.keyword.KeywordExtractor
 

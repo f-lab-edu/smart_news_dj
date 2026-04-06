@@ -78,29 +78,30 @@
 
 ## 아키텍처
 
-3-tier 구조를 기반으로 Domain 계층에 비즈니스 로직을 분리하여  
-플랫폼 및 데이터 구현으로부터의 독립성을 유지했습니다.  
+**Clean Architecture**를 기반으로 Domain 계층을 중심에 두고,  
+Presentation과 Data가 Domain에 의존하는 **동심원 구조**를 따릅니다.  
+Domain은 순수 Kotlin으로 플랫폼·프레임워크에 의존하지 않습니다.
 
-초기 MVP(Minimum Viable Product) 단계에서는 UseCase 계층을 최소화하고,  
+초기 MVP 단계에서는 UseCase 계층을 최소화하고,  
 추천 로직을 Domain에 집중해 이후 확장을 고려한 구조로 설계했습니다.
 
-| 레이어 | 역할                                             |
-|--------|------------------------------------------------|
-| **Presentation (MVI)** | 단일 상태, 이벤트 → 의도 Compose UI                     |
-| **Domain** | 순수 Kotlin: 엔진, 정책, 계산기 (**Android import 없음**) |
-| **Data** | Room, Retrofit, Repository 구현체                 |
+| 레이어 | 역할 | 의존 방향 |
+|--------|------|----------|
+| **Presentation (MVI)** | 단일 상태, 이벤트 → 의도, Compose UI | → Domain |
+| **Domain** | 순수 Kotlin: 엔진, 정책, 계산기, Repository 인터페이스 (**Android import 없음**) | 없음 (최내곽) |
+| **Data** | Room, Retrofit, Repository 구현체, 키워드 추출 구현 | → Domain |
 
 ### 스택 요약
 
 - **MVI**: 목록, 상세, 추천 영역의 상태를 예측 가능하게
 - **UseCase**: **필요한 순서로 Repository·Domain만 호출** — **무거운 계산은 Domain에 둠**
 - **Kotlin Flow**: DB, UI 스트림
-- **Domain**이 추천 규칙의 중심, **Data**는 저장, 네트워크만
+- **Domain**이 추천 규칙의 중심, **Data**는 Domain 인터페이스를 구현
 
 ### 구조 다이어그램 (Mermaid)
 
-의존성은 **위 → 아래** 한 방향입니다.  
-`Presentation → UseCase → Domain → Data` (역방향 의존 없음).
+의존성은 **바깥 → 안쪽** 방향입니다.  
+`Presentation → Domain ← Data` (Domain이 중심, 의존 역전).
 
 ```mermaid
 flowchart TB
@@ -110,27 +111,24 @@ flowchart TB
     UI <--> VM
   end
 
-  subgraph app [UseCase]
-    UC["작업 순서: 뉴스 로드 · 저장 · 상세 종료 · 추천 갱신"]
-  end
-
   subgraph dom [Domain 순수 Kotlin]
+    UC[UseCase]
     RE[RecommendationEngine]
     SC[ScoreCalculator]
     KM[KeywordMatcher]
     DP[DecayPolicy]
+    RepoIF["Repository 인터페이스"]
   end
 
   subgraph data [Data]
-    R[Repository 구현]
+    RepoImpl[Repository 구현]
     API[Retrofit]
     DB[(Room)]
+    KWImpl[키워드 추출 구현]
   end
 
-  pres --> UC
-  UC --> dom
-  UC --> data
-  dom -.->|인터페이스| data
+  pres --> dom
+  data --> dom
 ```
 
 - **UseCase**: 호출 순서만 맞추고, **실제 계산은 Domain**에 둠 (에이전트·협업 규칙은 [AGENTS.md](AGENTS.md) 참고).
@@ -192,18 +190,32 @@ flowchart LR
 
 ---
 
-## 패키지 구조 (예상)
+## 패키지 구조
 
 ```
 com.djyoo.smartnews
-├── presentation/     # MVI, Compose
-├── domain/
+├── di/                # Hilt DI 모듈 (앱 레벨 설정)
+├── domain/            # 최내곽 — 순수 Kotlin, 외부 의존 없음
 │   ├── engine/
-│   ├── scorer/
-│   ├── policy/
+│   ├── keyword/       # KeywordExtractor 인터페이스 (port)
 │   ├── matcher/
-│   └── usecase/      # 호출 순서만 (계산은 Domain)
-└── data/             # remote, local, repository 구현
+│   ├── model/
+│   ├── policy/
+│   ├── repository/    # Repository 인터페이스 (port)
+│   ├── scorer/
+│   └── usecase/
+├── data/              # 외곽 — Domain 인터페이스 구현
+│   ├── keyword/       # OktKeywordExtractor 등 구현체
+│   ├── local/         # Room DAO, Entity, DB
+│   ├── remote/        # Retrofit API, DTO
+│   ├── repository/    # Repository 구현체
+│   └── util/
+└── presentation/      # 외곽 — UI
+    ├── component/
+    ├── detail/
+    ├── home/
+    ├── navigation/
+    └── theme/
 ```
 
 ---

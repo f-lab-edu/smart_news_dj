@@ -1,4 +1,4 @@
-package com.djyoo.smartnews.core.di
+package com.djyoo.smartnews.di
 
 import android.content.Context
 import androidx.room.Room

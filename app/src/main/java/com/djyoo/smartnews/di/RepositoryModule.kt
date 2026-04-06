@@ -1,6 +1,6 @@
-package com.djyoo.smartnews.core.di
+package com.djyoo.smartnews.di
 
-import com.djyoo.smartnews.core.keyword.OktKeywordExtractor
+import com.djyoo.smartnews.data.keyword.OktKeywordExtractor
 import com.djyoo.smartnews.data.local.dao.ArticleDao
 import com.djyoo.smartnews.data.local.dao.InteractionDao
 import com.djyoo.smartnews.data.local.dao.UserKeywordDao

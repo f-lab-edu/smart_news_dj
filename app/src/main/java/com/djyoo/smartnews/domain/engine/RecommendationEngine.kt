@@ -10,7 +10,10 @@ class RecommendationEngine(
     fun recommend(
         articles: List<Article>,
         profile: List<UserKeyword>,
-        totalCount: Int = 20,
-        personalizedRatio: Double = 0.7,
     ): List<Article> = TODO("Not implemented")
+
+    private companion object {
+        const val TOTAL_COUNT = 20
+        const val PERSONALIZED_RATIO = 0.7
+    }
 }

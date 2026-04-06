@@ -1,4 +1,4 @@
-package com.djyoo.smartnews.core.di
+package com.djyoo.smartnews.di
 
 import com.djyoo.smartnews.domain.engine.RecommendationEngine
 import com.djyoo.smartnews.domain.policy.DecayPolicy

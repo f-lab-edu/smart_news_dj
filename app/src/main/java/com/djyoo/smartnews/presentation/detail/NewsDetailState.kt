@@ -7,8 +7,10 @@ data class NewsDetailState(
     val article: Article?,
     /** 세션 동안 관측된 스크롤 깊이의 최댓값 (0f~1f). */
     val maxScrollPercent: Float,
+    /** 기사 메타 로딩 중 (DB/폴백 조회). */
+    val isLoading: Boolean,
 ) {
     companion object {
-        fun initial(): NewsDetailState = NewsDetailState(article = null, maxScrollPercent = 0f)
+        fun initial(): NewsDetailState = NewsDetailState(article = null, maxScrollPercent = 0f, isLoading = true)
     }
 }

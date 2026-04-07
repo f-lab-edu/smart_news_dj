@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.map
 
 @Composable
 fun HomeScreen(
-    onClickedItem: (String) -> Unit,
+    onClickedItem: (articleId: String, originalLink: String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -51,7 +51,7 @@ fun HomeScreen(
 @Composable
 internal fun HomeScreenContent(
     state: HomeState,
-    onClickedItem: (String) -> Unit,
+    onClickedItem: (articleId: String, originalLink: String) -> Unit,
     onRefreshRequested: () -> Unit,
     onReachedBottom: () -> Unit,
 ) {
@@ -99,7 +99,7 @@ internal fun HomeScreenContent(
             items(state.recommendations, key = { "rec_${it.id}" }) { article ->
                 ArticleListItem(
                     article = article,
-                    onClick = { onClickedItem(article.id) },
+                    onClick = { onClickedItem(article.id, article.originalLink) },
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
@@ -114,7 +114,7 @@ internal fun HomeScreenContent(
             items(state.newsList, key = { "all_${it.id}" }) { article ->
                 ArticleListItem(
                     article = article,
-                    onClick = { onClickedItem(article.id) },
+                    onClick = { onClickedItem(article.id, article.originalLink) },
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
             }
@@ -185,7 +185,7 @@ private fun HomeScreenPreview() {
     SmartNewsTheme {
         HomeScreenContent(
             state = state,
-            onClickedItem = {},
+            onClickedItem = { _, _ -> },
             onRefreshRequested = {},
             onReachedBottom = {},
         )

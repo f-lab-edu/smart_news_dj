@@ -39,8 +39,25 @@ fun ArticleWithKeywords.toDomain(): Article =
         fetchedAt = article.fetchedAt,
     )
 
-fun UserKeywordEntity.toDomain(): UserKeyword = TODO("Not implemented")
+fun UserKeywordEntity.toDomain(): UserKeyword =
+    UserKeyword(
+        keyword = keyword,
+        score = score,
+        lastUpdated = lastUpdated,
+    )
 
-fun UserKeyword.toEntity(): UserKeywordEntity = TODO("Not implemented")
+fun UserKeyword.toEntity(): UserKeywordEntity =
+    UserKeywordEntity(
+        keyword = keyword,
+        score = score,
+        lastUpdated = lastUpdated,
+    )
 
-fun Interaction.toEntity(): InteractionEntity = TODO("Not implemented")
+fun Interaction.toEntity(): InteractionEntity =
+    InteractionEntity(
+        articleId = articleId,
+        clicked = clicked,
+        dwellTimeMs = dwellTimeMs,
+        scrollPercent = scrollPercent,
+        timestamp = timestamp,
+    )

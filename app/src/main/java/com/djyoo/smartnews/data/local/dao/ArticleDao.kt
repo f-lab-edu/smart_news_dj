@@ -20,6 +20,10 @@ interface ArticleDao {
     @Query("SELECT * FROM articles ORDER BY pubDate DESC LIMIT :limit")
     suspend fun getArticlesWithKeywords(limit: Int): List<ArticleWithKeywords>
 
+    @Transaction
+    @Query("SELECT * FROM articles WHERE id = :id LIMIT 1")
+    suspend fun getArticleWithKeywordsById(id: String): ArticleWithKeywords?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertArticles(articles: List<ArticleEntity>)
 

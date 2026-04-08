@@ -7,7 +7,5 @@ sealed interface NewsDetailIntent {
     ) : NewsDetailIntent
 
     /** 사용자가 상세 화면에서 뒤로가기를 요청했다. */
-    data class BackPressed(
-        val onDone: () -> Unit,
-    ) : NewsDetailIntent
+    data object BackPressed : NewsDetailIntent
 }

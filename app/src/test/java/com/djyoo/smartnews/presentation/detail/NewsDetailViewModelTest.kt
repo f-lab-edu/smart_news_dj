@@ -11,9 +11,12 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -41,7 +44,7 @@ class NewsDetailViewModelTest {
             advanceUntilIdle()
 
             assertEquals(expected, viewModel.state.value.article)
-            assertTrue(!viewModel.state.value.isLoading)
+            assertFalse(viewModel.state.value.isLoading)
         }
 
     @Test
@@ -67,7 +70,7 @@ class NewsDetailViewModelTest {
                     fetchedAt = 0L,
                 )
             assertEquals(expected, viewModel.state.value.article)
-            assertTrue(!viewModel.state.value.isLoading)
+            assertFalse(viewModel.state.value.isLoading)
         }
 
     @Test
@@ -81,7 +84,7 @@ class NewsDetailViewModelTest {
             advanceUntilIdle()
 
             assertNull(viewModel.state.value.article)
-            assertTrue(!viewModel.state.value.isLoading)
+            assertFalse(viewModel.state.value.isLoading)
         }
 
     @Test
@@ -103,9 +106,9 @@ class NewsDetailViewModelTest {
         }
 
     @Test
-    fun `backPressed intent records interaction and runs callback once`() =
+    fun `backPressed intent records interaction and emits navigateBack once`() =
         runTest {
-            // 사용자의 뒤로 의도 전달 시 상호작용 기록 + 완료 콜백이 1회 실행되는지 검증한다.
+            // 사용자의 뒤로 의도 전달 시 상호작용 기록 + NavigateBack effect를 검증한다.
             coEvery { loadArticleDetailUseCase.invoke("article-exit") } returns buildArticle("article-exit", "https://example.com/exit")
             val interactionSlot = slot<Interaction>()
             coEvery { recordInteractionUseCase.invoke(capture(interactionSlot)) } returns Unit
@@ -113,12 +116,12 @@ class NewsDetailViewModelTest {
             val viewModel = newViewModel(articleId = "article-exit", originalLink = "https://example.com/exit")
             advanceUntilIdle()
             viewModel.processIntent(NewsDetailIntent.UpdateScroll(0.85f))
+            val effectDeferred = async { viewModel.effects.first() }
 
-            var doneCount = 0
-            viewModel.processIntent(NewsDetailIntent.BackPressed { doneCount++ })
+            viewModel.processIntent(NewsDetailIntent.BackPressed)
             advanceUntilIdle()
 
-            assertEquals(1, doneCount)
+            assertEquals(NewsDetailEffect.NavigateBack, effectDeferred.await())
             coVerify(exactly = 1) { recordInteractionUseCase.invoke(any()) }
             assertEquals("article-exit", interactionSlot.captured.articleId)
             assertTrue(interactionSlot.captured.clicked)
@@ -138,11 +141,9 @@ class NewsDetailViewModelTest {
             val viewModel = newViewModel(articleId = "article-repeat", originalLink = "https://example.com/repeat")
             advanceUntilIdle()
 
-            var doneCount = 0
-            repeat(5) { viewModel.processIntent(NewsDetailIntent.BackPressed { doneCount++ }) }
+            repeat(5) { viewModel.processIntent(NewsDetailIntent.BackPressed) }
             advanceUntilIdle()
 
-            assertEquals(5, doneCount)
             coVerify(exactly = 5) { recordInteractionUseCase.invoke(any()) }
         }
 

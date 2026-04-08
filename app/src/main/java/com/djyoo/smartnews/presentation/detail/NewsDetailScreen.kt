@@ -12,6 +12,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -24,6 +25,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.djyoo.smartnews.domain.model.Article
 import com.djyoo.smartnews.presentation.theme.SmartNewsTheme
+import kotlinx.coroutines.flow.collect
 
 @Composable
 fun NewsDetailScreen(
@@ -31,16 +33,23 @@ fun NewsDetailScreen(
     viewModel: NewsDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                NewsDetailEffect.NavigateBack -> onBack()
+            }
+        }
+    }
 
     BackHandler {
-        viewModel.processIntent(NewsDetailIntent.BackPressed(onBack))
+        viewModel.processIntent(NewsDetailIntent.BackPressed)
     }
 
     NewsDetailContent(
         article = state.article,
         isLoading = state.isLoading,
         onScrollPercent = { percent -> viewModel.processIntent(NewsDetailIntent.UpdateScroll(percent)) },
-        onBack = { viewModel.processIntent(NewsDetailIntent.BackPressed(onBack)) },
+        onBack = { viewModel.processIntent(NewsDetailIntent.BackPressed) },
     )
 }
 

@@ -8,8 +8,10 @@ import com.djyoo.smartnews.domain.model.Interaction
 import com.djyoo.smartnews.domain.usecase.LoadArticleDetailUseCase
 import com.djyoo.smartnews.domain.usecase.RecordInteractionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,6 +29,8 @@ class NewsDetailViewModel
     ) : ViewModel() {
         private val _state = MutableStateFlow(NewsDetailState.initial())
         val state: StateFlow<NewsDetailState> = _state.asStateFlow()
+        private val _effects = MutableSharedFlow<NewsDetailEffect>()
+        val effects = _effects.asSharedFlow()
 
         private val startTimeMs: Long = System.currentTimeMillis()
 
@@ -61,16 +65,23 @@ class NewsDetailViewModel
             when (intent) {
                 is NewsDetailIntent.UpdateScroll -> {
                     _state.update { s ->
-                        s.copy(maxScrollPercent = maxOf(s.maxScrollPercent, intent.percent.coerceIn(0f, 1f)))
+                        s.copy(
+                            maxScrollPercent =
+                                maxOf(
+                                    s.maxScrollPercent,
+                                    intent.percent.coerceIn(0f, 1f),
+                                ),
+                        )
                     }
                 }
+
                 is NewsDetailIntent.BackPressed -> {
-                    handleBackPressed(intent.onDone)
+                    handleBackPressed()
                 }
             }
         }
 
-        private fun handleBackPressed(onDone: () -> Unit) {
+        private fun handleBackPressed() {
             viewModelScope.launch {
                 runCatching {
                     val article = state.value.article ?: return@runCatching
@@ -85,16 +96,16 @@ class NewsDetailViewModel
                         )
                     recordInteractionUseCase(interaction)
                 }
-                onDone()
+                _effects.emit(NewsDetailEffect.NavigateBack)
             }
-        }
-
-        private companion object {
-            const val DWELL_CAP_MS: Long = 120_000L
         }
 
         private fun decodeArg(value: String): String =
             runCatching {
                 URLDecoder.decode(value, StandardCharsets.UTF_8.name())
             }.getOrDefault(value)
+
+        private companion object {
+            const val DWELL_CAP_MS: Long = 120_000L
+        }
     }

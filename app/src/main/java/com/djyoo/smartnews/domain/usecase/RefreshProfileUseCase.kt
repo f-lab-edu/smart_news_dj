@@ -12,16 +12,18 @@ class RefreshProfileUseCase(
         if (keywordScores.isEmpty()) return
         val now = System.currentTimeMillis()
         val existing = userProfileRepository.getUserKeywordsSnapshot(TOP_K_KEYWORDS)
-        val merged = LinkedHashMap<String, UserKeyword>()
-        for (uk in existing) {
-            val days = ((now - uk.lastUpdated) / MS_PER_DAY).coerceAtLeast(0L)
-            val decayed = decayPolicy.apply(uk.score, days)
-            merged[uk.keyword] = UserKeyword(uk.keyword, decayed, now)
+        val merged = mutableMapOf<String, UserKeyword>()
+        for (userKeyword in existing) {
+            val days = ((now - userKeyword.lastUpdated) / MS_PER_DAY).coerceAtLeast(0L)
+            val decayed = decayPolicy.apply(userKeyword.score, days)
+            merged[userKeyword.keyword] = UserKeyword(userKeyword.keyword, decayed, now)
         }
+
         for ((keyword, delta) in keywordScores) {
             val prev = merged[keyword]?.score ?: 0.0
             merged[keyword] = UserKeyword(keyword, prev + delta, now)
         }
+
         val filtered =
             merged.values
                 .filter { it.score >= KEYWORD_SCORE_THRESHOLD }

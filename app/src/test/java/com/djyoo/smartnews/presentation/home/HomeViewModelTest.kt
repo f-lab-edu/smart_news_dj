@@ -12,7 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 
@@ -38,7 +38,7 @@ class HomeViewModelTest {
             advanceUntilIdle()
 
             assertEquals(expectedArticles, viewModel.state.value.newsList)
-            assertTrue(!viewModel.state.value.isLoading)
+            assertFalse(viewModel.state.value.isLoading)
             coVerify(exactly = 1) { fetchNewsUseCase.invoke("뉴스", 1, 100) }
         }
 
@@ -58,7 +58,7 @@ class HomeViewModelTest {
             advanceUntilIdle()
 
             assertEquals(refreshedArticles, viewModel.state.value.newsList)
-            assertTrue(!viewModel.state.value.isLoading)
+            assertFalse(viewModel.state.value.isLoading)
             coVerify(exactly = 2) { fetchNewsUseCase.invoke("뉴스", 1, 100) }
         }
 

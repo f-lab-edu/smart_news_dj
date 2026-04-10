@@ -15,8 +15,7 @@ class ScoreCalculator(
 
         val dwellNorm =
             interaction.dwellTimeMs
-                .coerceAtLeast(0L)
-                .coerceAtMost(dwellCapMs)
+                .coerceIn(0L, dwellCapMs)
                 .toDouble() / dwellCapMs
         val dwellScore = dwellNorm * dwellWeight
 

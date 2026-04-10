@@ -43,20 +43,23 @@ class NewsDetailViewModel
         init {
             viewModelScope.launch {
                 val loaded = loadArticleDetailUseCase(articleId)
-                val article: Article? =
-                    loaded
-                        ?: originalLinkArg.takeIf { it.isNotBlank() }?.let { url ->
-                            Article(
-                                id = articleId,
-                                title = "",
-                                description = "",
-                                link = url,
-                                originalLink = url,
-                                pubDate = 0L,
-                                keywords = emptyList(),
-                                fetchedAt = 0L,
-                            )
-                        }
+                val article =
+                    if (loaded != null) {
+                        loaded
+                    } else if (originalLinkArg.isNotBlank()) {
+                        Article(
+                            id = articleId,
+                            title = "",
+                            description = "",
+                            link = originalLinkArg,
+                            originalLink = originalLinkArg,
+                            pubDate = 0L,
+                            keywords = emptyList(),
+                            fetchedAt = 0L,
+                        )
+                    } else {
+                        null
+                    }
                 _state.update { it.copy(article = article, isLoading = false) }
             }
         }

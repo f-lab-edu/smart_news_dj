@@ -63,96 +63,134 @@ fun NewsDetailContent(
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        Text(
-            text = "뒤로",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
+        NewsDetailBackRow(onBack = onBack)
+        NewsDetailBody(
             modifier =
                 Modifier
-                    .padding(16.dp)
-                    .clickable(onClick = onBack),
+                    .weight(1f)
+                    .fillMaxWidth(),
+            article = article,
+            isLoading = isLoading,
+            onScrollPercent = onScrollPercent,
         )
+    }
+}
 
-        when {
-            isLoading -> {
-                Box(
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            article == null -> {
-                Box(
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "기사를 불러올 수 없습니다.",
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-            }
-            else -> {
-                val url = article.originalLink.ifBlank { article.link }
-                val isInPreview = LocalInspectionMode.current
-                if (url.isBlank()) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "표시할 링크가 없습니다.",
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
+@Composable
+private fun NewsDetailBackRow(onBack: () -> Unit) {
+    Text(
+        text = "뒤로",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier =
+            Modifier
+                .padding(16.dp)
+                .clickable(onClick = onBack),
+    )
+}
+
+@Composable
+private fun NewsDetailBody(
+    modifier: Modifier,
+    article: Article?,
+    isLoading: Boolean,
+    onScrollPercent: (Float) -> Unit,
+) {
+    when {
+        isLoading -> NewsDetailLoading(modifier = modifier)
+        article == null ->
+            NewsDetailCenteredMessage(
+                modifier = modifier,
+                message = "기사를 불러올 수 없습니다.",
+            )
+        else ->
+            NewsDetailArticlePane(
+                modifier = modifier,
+                article = article,
+                onScrollPercent = onScrollPercent,
+            )
+    }
+}
+
+@Composable
+private fun NewsDetailLoading(modifier: Modifier) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun NewsDetailCenteredMessage(
+    modifier: Modifier,
+    message: String,
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun NewsDetailArticlePane(
+    modifier: Modifier,
+    article: Article,
+    onScrollPercent: (Float) -> Unit,
+) {
+    val url = article.originalLink.ifBlank { article.link }
+    val isInPreview = LocalInspectionMode.current
+    when {
+        url.isBlank() ->
+            NewsDetailCenteredMessage(
+                modifier = modifier,
+                message = "표시할 링크가 없습니다.",
+            )
+        isInPreview ->
+            NewsDetailCenteredMessage(
+                modifier = modifier,
+                message = "프리뷰: WebView 영역",
+            )
+        else ->
+            NewsDetailWebView(
+                modifier = modifier,
+                articleId = article.id,
+                url = url,
+                onScrollPercent = onScrollPercent,
+            )
+    }
+}
+
+@Composable
+private fun NewsDetailWebView(
+    modifier: Modifier,
+    articleId: String,
+    url: String,
+    onScrollPercent: (Float) -> Unit,
+) {
+    key(articleId, url) {
+        AndroidView(
+            modifier = modifier,
+            factory = { context ->
+                ScrollMetricsWebView(context).apply {
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    webViewClient = WebViewClient()
+                    setOnScrollChangeListener { v, _, _, _, _ ->
+                        val w = v as ScrollMetricsWebView
+                        onScrollPercent(w.verticalScrollProgress())
                     }
-                } else if (isInPreview) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "프리뷰: WebView 영역",
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
-                } else {
-                    key(article.id, url) {
-                        AndroidView(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
-                            factory = { context ->
-                                ScrollMetricsWebView(context).apply {
-                                    settings.javaScriptEnabled = true
-                                    settings.domStorageEnabled = true
-                                    webViewClient = WebViewClient()
-                                    setOnScrollChangeListener { v, _, _, _, _ ->
-                                        val w = v as ScrollMetricsWebView
-                                        onScrollPercent(w.verticalScrollProgress())
-                                    }
-                                    loadUrl(url)
-                                }
-                            },
-                            onRelease = { it.destroy() },
-                        )
-                    }
+                    loadUrl(url)
                 }
-            }
-        }
+            },
+            onRelease = { it.destroy() },
+        )
     }
 }
 

@@ -20,17 +20,18 @@ class HomeViewModel
     constructor(
         private val fetchNewsPageUseCase: FetchNewsPageUseCase,
         private val fetchNewsUseCase: FetchNewsUseCase,
-        private val getRecommendationsUseCase: GetRecommendationsUseCase, // todo 추후 사용 예정
+        private val getRecommendationsUseCase: GetRecommendationsUseCase,
     ) : ViewModel() {
         private companion object {
-            // Naver API에서 사용하는 기본 broad query.
             const val DEFAULT_QUERY: String = "뉴스"
         }
 
         private val _state = MutableStateFlow(HomeState())
         val state: StateFlow<HomeState> = _state.asStateFlow()
 
-        // Naver API uses 1-based start index.
+        /** 추천 제외 전 누적 기사(첫 로드 DB 스냅샷 + 페이징). */
+        private var newsPoolUnfiltered: List<Article> = emptyList()
+
         private var apiStartIndex = 1
         private val initialLoadSize = 100
         private val pageSize = 100
@@ -55,7 +56,10 @@ class HomeViewModel
                 runCatching {
                     fetchNewsUseCase(query = DEFAULT_QUERY, start = apiStartIndex, display = initialLoadSize)
                 }.onSuccess { articles ->
-                    _state.update { current -> current.copy(newsList = articles, isLoading = false) }
+                    newsPoolUnfiltered = articles
+                    val recommendations = runCatching { getRecommendationsUseCase() }.getOrDefault(emptyList())
+                    applyRecommendationsAndNewsList(recommendations, articles)
+                    _state.update { it.copy(isLoading = false) }
                 }.onFailure {
                     _state.update { it.copy(isLoading = false) }
                 }
@@ -71,12 +75,18 @@ class HomeViewModel
         private fun loadMore() {
             if (isPaging) return
             isPaging = true
-            val nextStart = apiStartIndex + _state.value.newsList.size
+            val nextStart = apiStartIndex + newsPoolUnfiltered.size
+            val recIds = _state.value.recommendations.map { it.id }.toHashSet()
             viewModelScope.launch {
                 runCatching {
                     fetchNewsPageUseCase(query = DEFAULT_QUERY, start = nextStart, display = pageSize)
                 }.onSuccess { pageArticles ->
-                    _state.update { current -> current.copy(newsList = appendUnique(current.newsList, pageArticles)) }
+                    newsPoolUnfiltered = appendUnique(newsPoolUnfiltered, pageArticles)
+                    _state.update { current ->
+                        current.copy(
+                            newsList = newsPoolUnfiltered.filterNot { it.id in recIds },
+                        )
+                    }
                 }.onFailure {
                     // Keep current start for retry.
                 }.also {
@@ -86,7 +96,24 @@ class HomeViewModel
         }
 
         fun refreshRecommendations() {
-            // todo 추후 구현 예정
+            viewModelScope.launch {
+                runCatching { getRecommendationsUseCase() }.onSuccess { recommendations ->
+                    applyRecommendationsAndNewsList(recommendations, newsPoolUnfiltered)
+                }
+            }
+        }
+
+        private fun applyRecommendationsAndNewsList(
+            recommendations: List<Article>,
+            pool: List<Article>,
+        ) {
+            val recIds = recommendations.map { it.id }.toHashSet()
+            _state.update { current ->
+                current.copy(
+                    recommendations = recommendations,
+                    newsList = pool.filterNot { it.id in recIds },
+                )
+            }
         }
 
         private fun appendUnique(

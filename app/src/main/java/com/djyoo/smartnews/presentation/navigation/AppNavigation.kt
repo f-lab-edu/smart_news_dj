@@ -12,9 +12,12 @@ import com.djyoo.smartnews.presentation.home.HomeScreen
 
 object Routes {
     const val HOME = "home"
-    const val DETAIL = "detail?articleId={articleId}"
+    const val DETAIL = "detail?articleId={articleId}&originalLink={originalLink}"
 
-    fun detailRoute(articleId: String): String = "detail?articleId=${Uri.encode(articleId)}"
+    fun detailRoute(
+        articleId: String,
+        originalLink: String,
+    ): String = "detail?articleId=${Uri.encode(articleId)}&originalLink=${Uri.encode(originalLink)}"
 }
 
 @Composable
@@ -26,14 +29,21 @@ fun AppNavigation() {
     ) {
         composable(Routes.HOME) {
             HomeScreen(
-                onClickedItem = { articleId ->
-                    navController.navigate(Routes.detailRoute(articleId))
+                onClickedItem = { articleId, originalLink ->
+                    navController.navigate(Routes.detailRoute(articleId, originalLink))
                 },
             )
         }
         composable(
             route = Routes.DETAIL,
-            arguments = listOf(navArgument("articleId") { type = NavType.StringType }),
+            arguments =
+                listOf(
+                    navArgument("articleId") { type = NavType.StringType },
+                    navArgument("originalLink") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                ),
         ) {
             NewsDetailScreen(onBack = { navController.popBackStack() })
         }

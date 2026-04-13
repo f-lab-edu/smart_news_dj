@@ -19,4 +19,6 @@ interface ArticleRepository {
     ): Int
 
     suspend fun getArticlesSnapshot(limit: Int = 100): List<Article>
+
+    suspend fun getArticleById(id: String): Article?
 }

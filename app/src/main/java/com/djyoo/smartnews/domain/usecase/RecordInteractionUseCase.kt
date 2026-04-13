@@ -12,6 +12,13 @@ class RecordInteractionUseCase(
     private val refreshProfileUseCase: RefreshProfileUseCase,
 ) {
     suspend operator fun invoke(interaction: Interaction) {
-        TODO("Not implemented")
+        interactionRepository.insertInteraction(interaction)
+        val article = articleRepository.getArticleById(interaction.articleId) ?: return
+        if (article.keywords.isEmpty()) return
+        val baseScore = scoreCalculator.calculate(interaction)
+        val n = article.keywords.size
+        val perKeyword = baseScore / n
+        val keywordScores = article.keywords.associateWith { perKeyword }
+        refreshProfileUseCase(keywordScores)
     }
 }

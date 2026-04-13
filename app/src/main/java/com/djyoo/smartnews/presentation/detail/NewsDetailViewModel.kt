@@ -1,35 +1,114 @@
 package com.djyoo.smartnews.presentation.detail
 
-import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.djyoo.smartnews.domain.model.Article
+import com.djyoo.smartnews.domain.model.Interaction
+import com.djyoo.smartnews.domain.usecase.LoadArticleDetailUseCase
 import com.djyoo.smartnews.domain.usecase.RecordInteractionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 @HiltViewModel
 class NewsDetailViewModel
     @Inject
     constructor(
+        private val loadArticleDetailUseCase: LoadArticleDetailUseCase,
         private val recordInteractionUseCase: RecordInteractionUseCase,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val _state = MutableStateFlow(NewsDetailState.initial())
         val state: StateFlow<NewsDetailState> = _state.asStateFlow()
-        private val startTime = System.currentTimeMillis()
-        private val articleId: String =
-            try {
-                Uri.decode(savedStateHandle.get<String>("articleId"))
-            } catch (e: Exception) {
-                savedStateHandle.get<String>("articleId").orEmpty() // 실패 시 원본 사용
-            }
+        private val _effects = MutableSharedFlow<NewsDetailEffect>()
+        val effects = _effects.asSharedFlow()
 
-        fun processIntent(intent: NewsDetailIntent) {
+        private val startTimeMs: Long = System.currentTimeMillis()
+
+        private val articleId: String =
+            decodeArg(savedStateHandle.get<String>("articleId").orEmpty())
+
+        private val originalLinkArg: String =
+            decodeArg(savedStateHandle.get<String>("originalLink").orEmpty())
+
+        init {
+            viewModelScope.launch {
+                val loaded = loadArticleDetailUseCase(articleId)
+                val article =
+                    if (loaded != null) {
+                        loaded
+                    } else if (originalLinkArg.isNotBlank()) {
+                        Article(
+                            id = articleId,
+                            title = "",
+                            description = "",
+                            link = originalLinkArg,
+                            originalLink = originalLinkArg,
+                            pubDate = 0L,
+                            keywords = emptyList(),
+                            fetchedAt = 0L,
+                        )
+                    } else {
+                        null
+                    }
+                _state.update { it.copy(article = article, isLoading = false) }
+            }
         }
 
-        private fun onExit() {
+        fun processIntent(intent: NewsDetailIntent) {
+            when (intent) {
+                is NewsDetailIntent.UpdateScroll -> {
+                    _state.update { s ->
+                        s.copy(
+                            maxScrollPercent =
+                                maxOf(
+                                    s.maxScrollPercent,
+                                    intent.percent.coerceIn(0f, 1f),
+                                ),
+                        )
+                    }
+                }
+
+                is NewsDetailIntent.BackPressed -> {
+                    handleBackPressed()
+                }
+            }
+        }
+
+        private fun handleBackPressed() {
+            viewModelScope.launch {
+                runCatching {
+                    val article = state.value.article ?: return@runCatching
+                    val dwellMs = (System.currentTimeMillis() - startTimeMs).coerceAtMost(DWELL_CAP_MS)
+                    val interaction =
+                        Interaction(
+                            articleId = article.id,
+                            clicked = true,
+                            dwellTimeMs = dwellMs,
+                            scrollPercent = state.value.maxScrollPercent,
+                            timestamp = System.currentTimeMillis(),
+                        )
+                    recordInteractionUseCase(interaction)
+                }
+                _effects.emit(NewsDetailEffect.NavigateBack)
+            }
+        }
+
+        private fun decodeArg(value: String): String =
+            runCatching {
+                URLDecoder.decode(value, StandardCharsets.UTF_8.name())
+            }.getOrDefault(value)
+
+        private companion object {
+            const val DWELL_CAP_MS: Long = 120_000L
         }
     }

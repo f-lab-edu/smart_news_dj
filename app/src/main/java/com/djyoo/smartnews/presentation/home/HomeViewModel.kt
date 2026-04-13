@@ -76,7 +76,10 @@ class HomeViewModel
             if (isPaging) return
             isPaging = true
             val nextStart = apiStartIndex + newsPoolUnfiltered.size
-            val recIds = _state.value.recommendations.map { it.id }.toHashSet()
+            val recIds =
+                _state.value.recommendations
+                    .map { it.id }
+                    .toHashSet()
             viewModelScope.launch {
                 runCatching {
                     fetchNewsPageUseCase(query = DEFAULT_QUERY, start = nextStart, display = pageSize)

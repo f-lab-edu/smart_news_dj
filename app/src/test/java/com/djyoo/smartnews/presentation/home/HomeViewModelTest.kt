@@ -12,9 +12,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 
@@ -55,10 +55,11 @@ class HomeViewModelTest {
             // 새로고침 이후에는 start=1 기준으로 첫 페이지를 다시 조회해야 한다.
             val initialArticles = buildArticles(count = 100, startId = 0)
             val refreshedArticles = buildArticles(count = 100, startId = 1000)
-            coEvery { fetchNewsUseCase.invoke(any(), any(), any()) } returnsMany listOf(
-                initialArticles,
-                refreshedArticles
-            )
+            coEvery { fetchNewsUseCase.invoke(any(), any(), any()) } returnsMany
+                listOf(
+                    initialArticles,
+                    refreshedArticles,
+                )
             coEvery { fetchNewsPageUseCase.invoke(any(), any(), any()) } returns emptyList()
 
             val viewModel = newViewModel()
@@ -109,7 +110,10 @@ class HomeViewModelTest {
 
             assertEquals(recommended, viewModel.state.value.recommendations)
             val recIds = recommended.map { it.id }.toSet()
-            assertTrue(viewModel.state.value.newsList.none { it.id in recIds })
+            assertTrue(
+                viewModel.state.value.newsList
+                    .none { it.id in recIds },
+            )
             assertEquals(80, viewModel.state.value.newsList.size)
         }
 

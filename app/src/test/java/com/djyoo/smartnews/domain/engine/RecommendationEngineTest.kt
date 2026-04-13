@@ -3,10 +3,10 @@ package com.djyoo.smartnews.domain.engine
 import com.djyoo.smartnews.domain.matcher.KeywordMatcher
 import com.djyoo.smartnews.domain.model.Article
 import com.djyoo.smartnews.domain.model.UserKeyword
-import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.random.Random
 
 class RecommendationEngineTest {
     private val matcher = KeywordMatcher()

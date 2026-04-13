@@ -23,7 +23,7 @@ class RecommendationEngine(
         val explorationSlots = (slotTotal - personalizedSlots).coerceAtLeast(0)
 
         val scored = pool.map { article -> article to keywordMatcher.matchScore(article, profile) }
-        val selected = LinkedHashMap<String, Article>()
+        val selected = linkedMapOf<String, Article>()
 
         fillPersonalizedSlots(scored, personalizedSlots, selected)
         fillExplorationSlots(pool, explorationSlots, selected)
@@ -34,7 +34,7 @@ class RecommendationEngine(
     private fun fillPersonalizedSlots(
         scored: List<Pair<Article, Double>>,
         personalizedSlots: Int,
-        selected: LinkedHashMap<String, Article>,
+        selected: MutableMap<String, Article>,
     ) {
         if (personalizedSlots <= 0) return
 
@@ -47,24 +47,29 @@ class RecommendationEngine(
         val remainingSlots = personalizedSlots - selected.size
         if (remainingSlots <= 0) return
 
-        val candidates = scored.map { it.first }.filter { it.id !in selected.keys }
+        val candidates =
+            scored
+                .asSequence()
+                .map { (article, _) -> article }
+                .filter { it.id !in selected }
+                .toList()
         pickRandomDistinct(candidates, remainingSlots, selected)
     }
 
     private fun fillExplorationSlots(
         pool: List<Article>,
         explorationSlots: Int,
-        selected: LinkedHashMap<String, Article>,
+        selected: MutableMap<String, Article>,
     ) {
         if (explorationSlots <= 0) return
-        val candidates = pool.filter { it.id !in selected.keys }
+        val candidates = pool.filter { it.id !in selected }
         pickRandomDistinct(candidates, explorationSlots, selected)
     }
 
     private fun pickRandomDistinct(
         candidates: List<Article>,
         count: Int,
-        selected: LinkedHashMap<String, Article>,
+        selected: MutableMap<String, Article>,
     ) {
         if (count <= 0 || candidates.isEmpty()) return
         val take = min(count, candidates.size)

@@ -9,20 +9,31 @@ class KeywordMatcher {
         profile: List<UserKeyword>,
     ): Double {
         if (profile.isEmpty() || article.keywords.isEmpty()) return 0.0
+
         val profileByNorm =
             profile
-                .mapNotNull { uk ->
-                    val key = normalizeKeyword(uk.keyword)
-                    if (key.isEmpty()) null else key to uk.score
-                }.groupBy({ it.first }, { it.second })
-                .mapValues { (_, scores) -> scores.sum() }
+                .mapNotNull { userKeyword ->
+                    val key = normalizeKeyword(userKeyword.keyword)
+                    if (key.isEmpty()) null else key to userKeyword.score
+                }
+                .groupBy(
+                    { it.first },
+                    { it.second },
+                )
+                .mapValues { (_, scores) ->
+                    scores.sum()
+                }
 
         return article.keywords
-            .mapNotNull { kw ->
-                val key = normalizeKeyword(kw)
+            .mapNotNull { articleKeyword ->
+                val key = normalizeKeyword(articleKeyword)
                 profileByNorm[key]
-            }.sum()
+            }
+            .sum()
     }
 
-    private fun normalizeKeyword(raw: String): String = raw.trim().lowercase()
+    private fun normalizeKeyword(raw: String): String =
+        raw
+            .trim()
+            .lowercase()
 }

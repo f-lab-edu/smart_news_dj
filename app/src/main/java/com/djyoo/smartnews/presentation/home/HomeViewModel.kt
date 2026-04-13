@@ -79,7 +79,7 @@ class HomeViewModel
             val recIds =
                 _state.value.recommendations
                     .map { it.id }
-                    .toHashSet()
+                    .toSet()
             viewModelScope.launch {
                 runCatching {
                     fetchNewsPageUseCase(query = DEFAULT_QUERY, start = nextStart, display = pageSize)
@@ -110,7 +110,7 @@ class HomeViewModel
             recommendations: List<Article>,
             pool: List<Article>,
         ) {
-            val recIds = recommendations.map { it.id }.toHashSet()
+            val recIds = recommendations.map { it.id }.toSet()
             _state.update { current ->
                 current.copy(
                     recommendations = recommendations,
@@ -123,7 +123,7 @@ class HomeViewModel
             current: List<Article>,
             incoming: List<Article>,
         ): List<Article> {
-            val existingIds = current.asSequence().map { it.id }.toHashSet()
+            val existingIds = current.asSequence().map { it.id }.toSet()
             val newOnes = incoming.filterNot { it.id in existingIds }
             return current + newOnes
         }

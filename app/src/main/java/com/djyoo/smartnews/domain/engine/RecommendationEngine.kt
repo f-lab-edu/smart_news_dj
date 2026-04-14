@@ -23,7 +23,7 @@ class RecommendationEngine(
         val explorationSlots = (slotTotal - personalizedSlots).coerceAtLeast(0)
 
         val scored = pool.map { article -> article to keywordMatcher.matchScore(article, profile) }
-        val selected = linkedMapOf<String, Article>()
+        val selected = mutableMapOf<String, Article>()
 
         fillPersonalizedSlots(scored, personalizedSlots, selected)
         fillExplorationSlots(pool, explorationSlots, selected)

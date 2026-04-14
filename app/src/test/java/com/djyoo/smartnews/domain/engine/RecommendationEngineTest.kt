@@ -4,8 +4,9 @@ import com.djyoo.smartnews.domain.matcher.KeywordMatcher
 import com.djyoo.smartnews.domain.model.Article
 import com.djyoo.smartnews.domain.model.UserKeyword
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.min
+import kotlin.math.round
 import kotlin.random.Random
 
 class RecommendationEngineTest {
@@ -22,9 +23,8 @@ class RecommendationEngineTest {
         val articles = buildArticles(25, startId = 0)
         val engine = RecommendationEngine(keywordMatcher = matcher, random = Random(42L))
         val result = engine.recommend(articles, profile = emptyList())
-        assertEquals(20, result.size)
-        assertEquals(result.distinctBy { it.id }.size, result.size)
-        result.forEach { a -> assertTrue(articles.any { it.id == a.id }) }
+        val expected = expectedWhenProfileEmpty(articles = articles, random = Random(42L))
+        assertEquals(expected, result)
     }
 
     @Test
@@ -32,8 +32,8 @@ class RecommendationEngineTest {
         val articles = buildArticles(5, startId = 0)
         val engine = RecommendationEngine(keywordMatcher = matcher, random = Random(0L))
         val result = engine.recommend(articles, emptyList())
-        assertEquals(5, result.size)
-        assertEquals(articles.map { it.id }.toSet(), result.map { it.id }.toSet())
+        val expected = expectedWhenProfileEmpty(articles = articles, random = Random(0L))
+        assertEquals(expected, result)
     }
 
     @Test
@@ -49,8 +49,31 @@ class RecommendationEngineTest {
             )
         val engine = RecommendationEngine(keywordMatcher = matcher, random = Random(0L))
         val result = engine.recommend(articles, profile)
-        assertEquals(2, result.size)
-        assertEquals("a", result.first().id)
+        val expected = listOf(articles[0], articles[1])
+        assertEquals(expected, result)
+    }
+
+    private fun expectedWhenProfileEmpty(
+        articles: List<Article>,
+        random: Random,
+    ): List<Article> {
+        val pool = articles.distinctBy { it.id }
+        val slotTotal = min(20, pool.size)
+        val personalizedSlots = round(slotTotal * 0.7).toInt().coerceAtLeast(0)
+        val explorationSlots = (slotTotal - personalizedSlots).coerceAtLeast(0)
+        val selected = mutableMapOf<String, Article>()
+
+        val personalizedCandidates = pool.shuffled(random).take(personalizedSlots)
+        personalizedCandidates.forEach { article -> selected.putIfAbsent(article.id, article) }
+
+        val explorationCandidates =
+            pool
+                .filterNot { it.id in selected }
+                .shuffled(random)
+                .take(explorationSlots)
+        explorationCandidates.forEach { article -> selected.putIfAbsent(article.id, article) }
+
+        return selected.values.toList()
     }
 
     private fun buildArticles(

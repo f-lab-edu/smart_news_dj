@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -110,11 +109,8 @@ class HomeViewModelTest {
 
             assertEquals(recommended, viewModel.state.value.recommendations)
             val recIds = recommended.map { it.id }.toSet()
-            assertTrue(
-                viewModel.state.value.newsList
-                    .none { it.id in recIds },
-            )
-            assertEquals(80, viewModel.state.value.newsList.size)
+            val expectedNewsList = allArticles.filterNot { it.id in recIds }
+            assertEquals(expectedNewsList, viewModel.state.value.newsList)
         }
 
     private fun newViewModel(): HomeViewModel =

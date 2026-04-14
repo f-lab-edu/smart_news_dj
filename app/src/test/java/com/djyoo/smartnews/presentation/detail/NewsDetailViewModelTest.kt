@@ -16,10 +16,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -43,8 +39,8 @@ class NewsDetailViewModelTest {
             val viewModel = newViewModel(articleId = "article-1", originalLink = "https://fallback.example")
             advanceUntilIdle()
 
-            assertEquals(expected, viewModel.state.value.article)
-            assertFalse(viewModel.state.value.isLoading)
+            val expectedState = NewsDetailState(article = expected, maxScrollPercent = 0f, isLoading = false)
+            assertEquals(expectedState, viewModel.state.value)
         }
 
     @Test
@@ -69,8 +65,8 @@ class NewsDetailViewModelTest {
                     keywords = emptyList(),
                     fetchedAt = 0L,
                 )
-            assertEquals(expected, viewModel.state.value.article)
-            assertFalse(viewModel.state.value.isLoading)
+            val expectedState = NewsDetailState(article = expected, maxScrollPercent = 0f, isLoading = false)
+            assertEquals(expectedState, viewModel.state.value)
         }
 
     @Test
@@ -83,8 +79,8 @@ class NewsDetailViewModelTest {
             val viewModel = newViewModel(articleId = "", originalLink = "")
             advanceUntilIdle()
 
-            assertNull(viewModel.state.value.article)
-            assertFalse(viewModel.state.value.isLoading)
+            val expectedState = NewsDetailState(article = null, maxScrollPercent = 0f, isLoading = false)
+            assertEquals(expectedState, viewModel.state.value)
         }
 
     @Test
@@ -102,7 +98,13 @@ class NewsDetailViewModelTest {
             viewModel.processIntent(NewsDetailIntent.UpdateScroll(0.8f))
             viewModel.processIntent(NewsDetailIntent.UpdateScroll(0.4f))
 
-            assertEquals(0.8f, viewModel.state.value.maxScrollPercent, 0.0001f)
+            val expectedState =
+                NewsDetailState(
+                    article = buildArticle("article-scroll", "https://example.com/scroll"),
+                    maxScrollPercent = 0.8f,
+                    isLoading = false,
+                )
+            assertEquals(expectedState, viewModel.state.value)
         }
 
     @Test
@@ -123,11 +125,16 @@ class NewsDetailViewModelTest {
 
             assertEquals(NewsDetailEffect.NavigateBack, effectDeferred.await())
             coVerify(exactly = 1) { recordInteractionUseCase.invoke(any()) }
-            assertEquals("article-exit", interactionSlot.captured.articleId)
-            assertTrue(interactionSlot.captured.clicked)
-            assertEquals(0.85f, interactionSlot.captured.scrollPercent, 0.0001f)
-            assertTrue(interactionSlot.captured.dwellTimeMs in 0L..120_000L)
-            assertNotNull(interactionSlot.captured.timestamp)
+            val actualInteraction = interactionSlot.captured
+            val expectedInteraction =
+                Interaction(
+                    articleId = "article-exit",
+                    clicked = true,
+                    dwellTimeMs = 0L,
+                    scrollPercent = 0.85f,
+                    timestamp = 0L,
+                )
+            assertEquals(expectedInteraction, actualInteraction.copy(dwellTimeMs = 0L, timestamp = 0L))
         }
 
     @Test

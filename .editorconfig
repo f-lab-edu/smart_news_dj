@@ -11,4 +11,6 @@ indent_size = 4
 
 # Compose convention: allow PascalCase for @Composable/@Preview functions.
 ktlint_function_naming_ignore_when_annotated_with = Composable,Preview
+# Keep manual multiline chain formatting instead of re-joining method chains.
+ktlint_standard_chain-method-continuation = disabled
 

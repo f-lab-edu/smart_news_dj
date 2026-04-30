@@ -10,5 +10,9 @@ class GetRecommendationsUseCase(
     private val userProfileRepository: UserProfileRepository,
     private val recommendationEngine: RecommendationEngine,
 ) {
-    suspend operator fun invoke(): List<Article> = TODO("Not implemented")
+    suspend operator fun invoke(): List<Article> {
+        val articles = articleRepository.getArticlesSnapshot(limit = 100)
+        val profile = userProfileRepository.getUserKeywordsSnapshot(limit = 20)
+        return recommendationEngine.recommend(articles = articles, profile = profile)
+    }
 }

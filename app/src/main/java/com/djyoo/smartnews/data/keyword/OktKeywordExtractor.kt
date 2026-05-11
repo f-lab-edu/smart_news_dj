@@ -1,14 +1,60 @@
 package com.djyoo.smartnews.data.keyword
 
 import com.djyoo.smartnews.domain.keyword.KeywordExtractor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.openkoreantext.processor.OpenKoreanTextProcessorJava
 
 /**
- * Okt(Open Korean Text)는 한국어 형태소 분석기입니다.(lib)
- * 제목/설명 텍스트에서 명사 등 키워드 후보를 추출하는 데 사용합니다.
+ * Open Korean Text로 명사 후보를 얻고, 불용어·길이 등 휴리스틱과 제목/설명 쿼터로 최종 키워드를 고른다.
  */
 class OktKeywordExtractor : KeywordExtractor {
     override suspend fun extract(
         title: String,
         description: String,
-    ): List<String> = TODO("Not implemented")
+    ): List<String> =
+        withContext(Dispatchers.Default) {
+            val normalizedTitle = normalizeThenOpenKoreanNormalize(title)
+            val normalizedDescription = normalizeThenOpenKoreanNormalize(description)
+            val titleNouns =
+                KoreanNounSurfaceExtractor.nounSurfacesFromNormalizedKoreanText(normalizedTitle)
+            val descriptionNouns =
+                KoreanNounSurfaceExtractor.nounSurfacesFromNormalizedKoreanText(normalizedDescription)
+            val titleRanked = rankedDistinctSurfacesPassingHeuristic(titleNouns)
+            val descriptionRanked = rankedDistinctSurfacesPassingHeuristic(descriptionNouns)
+            KeywordQuotaMerger.mergeTitleThenDescription(
+                titleRankedDistinct = titleRanked,
+                descriptionRankedDistinct = descriptionRanked,
+            )
+        }
+
+    private fun normalizeThenOpenKoreanNormalize(raw: String): CharSequence {
+        val pipelineNormalized = TextNormalizer.normalizeForKeywordPipeline(raw)
+        return OpenKoreanTextProcessorJava.normalize(pipelineNormalized)
+    }
+
+    private fun rankedDistinctSurfacesPassingHeuristic(surfaces: List<String>): List<String> {
+        val passing = surfaces.filter { surface -> passesKeywordHeuristic(surface) }
+        val firstOccurrenceIndex =
+            passing.withIndex().groupBy { it.value }.mapValues { entry -> entry.value.minOf { it.index } }
+        val frequencyBySurface = passing.groupingBy { it }.eachCount()
+        return passing
+            .distinct()
+            .sortedWith(
+                compareByDescending<String> { frequencyBySurface[it] ?: 0 }
+                    .thenBy { firstOccurrenceIndex[it] ?: 0 },
+            )
+    }
+
+    private fun passesKeywordHeuristic(surface: String): Boolean {
+        if (surface.length < MIN_KEYWORD_LENGTH) return false
+        if (surface in Stopwords.knownIrrelevantSurfaces) return false
+        if (surface.all { it.isDigit() }) return false
+        if (surface.startsWith("http", ignoreCase = true)) return false
+        return true
+    }
+
+    private companion object {
+        const val MIN_KEYWORD_LENGTH: Int = 2
+    }
 }

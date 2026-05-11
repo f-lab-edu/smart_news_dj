@@ -10,6 +10,7 @@ internal object KoreanNounSurfaceExtractor {
     fun nounSurfacesFromNormalizedKoreanText(normalizedText: CharSequence): List<String> {
         if (normalizedText.isBlank()) return emptyList()
         val tokenSequence = OpenKoreanTextProcessorJava.tokenize(normalizedText)
+
         @Suppress("UNCHECKED_CAST")
         val javaTokens =
             OpenKoreanTextProcessorJava.tokensToJavaKoreanTokenList(

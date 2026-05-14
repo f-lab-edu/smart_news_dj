@@ -21,8 +21,9 @@ internal object KoreanNounSurfaceExtractor {
             .filter { token ->
                 token.pos == KoreanPosJava.Noun || token.pos == KoreanPosJava.ProperNoun
             }
-            .map { it.text.trim() }
-            .filter { it.isNotEmpty() }
+            .map(KoreanTokenJava::getText)
+            .map(String::trim)
+            .filter(String::isNotEmpty)
             .toList()
     }
 }

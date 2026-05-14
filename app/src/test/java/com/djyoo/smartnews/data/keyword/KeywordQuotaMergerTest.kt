@@ -13,6 +13,9 @@ class KeywordQuotaMergerTest {
             KeywordQuotaMerger.mergeTitleThenDescription(
                 titleRankedDistinct = titleRanked,
                 descriptionRankedDistinct = descriptionRanked,
+                maxTotal = KeywordQuotaMerger.DEFAULT_MAX_TOTAL,
+                maxFromTitle = KeywordQuotaMerger.DEFAULT_MAX_FROM_TITLE,
+                maxFromDescription = KeywordQuotaMerger.DEFAULT_MAX_FROM_DESCRIPTION,
             )
         assertEquals(expected, actual)
     }
@@ -26,6 +29,9 @@ class KeywordQuotaMergerTest {
             KeywordQuotaMerger.mergeTitleThenDescription(
                 titleRankedDistinct = titleRanked,
                 descriptionRankedDistinct = descriptionRanked,
+                maxTotal = KeywordQuotaMerger.DEFAULT_MAX_TOTAL,
+                maxFromTitle = KeywordQuotaMerger.DEFAULT_MAX_FROM_TITLE,
+                maxFromDescription = KeywordQuotaMerger.DEFAULT_MAX_FROM_DESCRIPTION,
             )
         assertEquals(expected, actual)
     }
@@ -39,6 +45,9 @@ class KeywordQuotaMergerTest {
             KeywordQuotaMerger.mergeTitleThenDescription(
                 titleRankedDistinct = titleRanked,
                 descriptionRankedDistinct = descriptionRanked,
+                maxTotal = KeywordQuotaMerger.DEFAULT_MAX_TOTAL,
+                maxFromTitle = KeywordQuotaMerger.DEFAULT_MAX_FROM_TITLE,
+                maxFromDescription = KeywordQuotaMerger.DEFAULT_MAX_FROM_DESCRIPTION,
             )
         assertEquals(expected, actual)
     }
@@ -51,6 +60,8 @@ class KeywordQuotaMergerTest {
                 titleRankedDistinct = listOf("정치", "경제"),
                 descriptionRankedDistinct = listOf("사회"),
                 maxTotal = 0,
+                maxFromTitle = KeywordQuotaMerger.DEFAULT_MAX_FROM_TITLE,
+                maxFromDescription = KeywordQuotaMerger.DEFAULT_MAX_FROM_DESCRIPTION,
             )
         assertEquals(expected, actual)
     }
@@ -64,6 +75,9 @@ class KeywordQuotaMergerTest {
             KeywordQuotaMerger.mergeTitleThenDescription(
                 titleRankedDistinct = titleRanked,
                 descriptionRankedDistinct = descriptionRanked,
+                maxTotal = KeywordQuotaMerger.DEFAULT_MAX_TOTAL,
+                maxFromTitle = KeywordQuotaMerger.DEFAULT_MAX_FROM_TITLE,
+                maxFromDescription = KeywordQuotaMerger.DEFAULT_MAX_FROM_DESCRIPTION,
             )
         assertEquals(expected, actual)
     }
@@ -77,6 +91,9 @@ class KeywordQuotaMergerTest {
             KeywordQuotaMerger.mergeTitleThenDescription(
                 titleRankedDistinct = titleRanked,
                 descriptionRankedDistinct = descriptionRanked,
+                maxTotal = KeywordQuotaMerger.DEFAULT_MAX_TOTAL,
+                maxFromTitle = KeywordQuotaMerger.DEFAULT_MAX_FROM_TITLE,
+                maxFromDescription = KeywordQuotaMerger.DEFAULT_MAX_FROM_DESCRIPTION,
             )
         assertEquals(expected, actual)
     }

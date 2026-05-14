@@ -25,6 +25,9 @@ class OktKeywordExtractor : KeywordExtractor {
             KeywordQuotaMerger.mergeTitleThenDescription(
                 titleRankedDistinct = titleRanked,
                 descriptionRankedDistinct = descriptionRanked,
+                maxTotal = KeywordQuotaMerger.DEFAULT_MAX_TOTAL,
+                maxFromTitle = KeywordQuotaMerger.DEFAULT_MAX_FROM_TITLE,
+                maxFromDescription = KeywordQuotaMerger.DEFAULT_MAX_FROM_DESCRIPTION,
             )
         }
 
@@ -46,13 +49,14 @@ class OktKeywordExtractor : KeywordExtractor {
             )
     }
 
-    private fun passesKeywordHeuristic(surface: String): Boolean {
-        if (surface.length < MIN_KEYWORD_LENGTH) return false
-        if (surface in Stopwords.knownIrrelevantSurfaces) return false
-        if (surface.all { it.isDigit() }) return false
-        if (surface.startsWith("http", ignoreCase = true)) return false
-        return true
-    }
+    private fun passesKeywordHeuristic(surface: String): Boolean =
+        when {
+            surface.length < MIN_KEYWORD_LENGTH -> false
+            surface in Stopwords.knownIrrelevantSurfaces -> false
+            surface.all { it.isDigit() } -> false
+            surface.startsWith("http", ignoreCase = true) -> false
+            else -> true
+        }
 
     private companion object {
         const val MIN_KEYWORD_LENGTH: Int = 2

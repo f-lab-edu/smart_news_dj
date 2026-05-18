@@ -24,7 +24,7 @@ fun Article.toKeywordCrossRefs(): List<ArticleKeywordCrossRef> =
     keywords
         .distinct()
         .map { keyword ->
-            ArticleKeywordCrossRef(articleId = id, keyword = keyword, source = "unknown")
+            ArticleKeywordCrossRef(articleId = id, keyword = keyword, source = "okt_quota_merge")
         }
 
 fun ArticleWithKeywords.toDomain(): Article =

@@ -45,12 +45,16 @@ class ArticleRepositoryImpl(
         start: Int,
         display: Int,
     ): Int {
-        val articles = fetchNewsPage(query = query, start = start, display = display)
-
-        articleDao.upsertArticles(articles.map { it.toEntity() })
-        articleDao.upsertArticleKeywords(articles.flatMap { it.toKeywordCrossRefs() })
+        val articlesWithoutKeywords = fetchNewsPage(query = query, start = start, display = display)
+        val articlesWithExtractedKeywords =
+            articlesWithoutKeywords.map { article ->
+                val extractedKeywords = keywordExtractor.extract(article.title, article.description)
+                article.copy(keywords = extractedKeywords)
+            }
+        articleDao.upsertArticles(articlesWithExtractedKeywords.map { it.toEntity() })
+        articleDao.upsertArticleKeywords(articlesWithExtractedKeywords.flatMap { it.toKeywordCrossRefs() })
         articleDao.trimToMaxCount(maxCount = 100)
-        return articles.size
+        return articlesWithExtractedKeywords.size
     }
 
     override suspend fun getArticlesSnapshot(limit: Int): List<Article> = articleDao.getArticlesWithKeywords(limit).map { it.toDomain() }
